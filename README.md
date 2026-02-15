@@ -16,5 +16,6 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 
-## Ressources consulter
+## Ressources consultées
 - https://www.youtube.com/watch?v=nUBMK7UEQ1Q
+- https://api.flutter.dev/flutter/widgets/GridView-class.html
