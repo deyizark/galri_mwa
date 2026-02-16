@@ -9,7 +9,7 @@ class APIService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw "Gen yon bagay ki pa mache byen";
+      throw "Gen yon bagay ki pa mache byen !!";
     }
   }
 }
