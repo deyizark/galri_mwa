@@ -12,10 +12,10 @@ class Photo {
 
 class Photographer {
   final int photographerId;
-  final String photograger;
+  final String photographer;
 
   Photographer({
     required this.photographerId,
-    required this.photograger,
+    required this.photographer,
   });
 }

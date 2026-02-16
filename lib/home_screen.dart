@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
+                            builder: (context) =>
                                 PhotoScreen(photographer: photographer),
                           ),
                         );
