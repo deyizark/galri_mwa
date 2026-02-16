@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 import 'api_service.dart';
 import 'models.dart';
 import 'storage_helper.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 const kPrimaryColor = Color(0xFF1976D2);
 const kBlueGradient = [Color(0xFF1976D2), Color(0xFF64B5F6)];
@@ -433,12 +437,52 @@ class _PhotoScreenState extends State<PhotoScreen> {
       Future<void> Function(Photo) add,
       Future<void> Function(String) remove,
       String addMsg,
-      String removeMsg) async {
+      String removeMsg,
+      bool isLocal) async {
     final photo = photos.firstWhere((p) => p.id.toString() == id);
     final wasPresent = ids.contains(id);
+
     setState(() => wasPresent ? ids.remove(id) : ids.add(id));
-    wasPresent ? await remove(id) : await add(photo);
-    _showMsg(wasPresent ? removeMsg : addMsg);
+
+    if (wasPresent) {
+      await remove(id);
+      _showMsg(removeMsg);
+    } else {
+      await add(photo);
+      if (isLocal) {
+        await _downloadPhoto(photo);
+      }
+      _showMsg(addMsg);
+    }
+  }
+
+  Future<void> _downloadPhoto(Photo photo) async {
+    try {
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+      }
+
+      if (status.isGranted) {
+        final response = await http
+            .get(Uri.parse(photo.src.replaceFirst('medium', 'large')));
+        if (response.statusCode == 200) {
+          final result = await ImageGallerySaver.saveImage(
+            response.bodyBytes,
+            quality: 100,
+            name: "pexels_${photo.id}",
+          );
+
+          if (result['isSuccess']) {
+            _showMsg('Foto telechaje nan galri telefòn ou ✓');
+          }
+        }
+      } else {
+        _showMsg('Bezwen permission pou telechaje foto');
+      }
+    } catch (e) {
+      _showMsg('Erè pandan telechajman: $e');
+    }
   }
 
   void _showMsg(String m) => ScaffoldMessenger.of(context).showSnackBar(
@@ -448,7 +492,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
           backgroundColor: kPrimaryColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 1)));
+          duration: const Duration(seconds: 2)));
 
   @override
   Widget build(BuildContext context) {
@@ -486,26 +530,29 @@ class _PhotoScreenState extends State<PhotoScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => PhotoDetailScreen(
-                            photo: photo,
-                            isFavorite: favoriteIds.contains(id),
-                            isLocal: localIds.contains(id),
+                            photos: photos,
+                            initialIndex: i,
+                            favoriteIds: favoriteIds,
+                            localIds: localIds,
                             onToggleFavorite: (id) => _toggle(
                                 id,
                                 favoriteIds,
                                 StorageHelper.addFavorite,
                                 StorageHelper.removeFavorite,
                                 'Foto ajoute nan favori',
-                                'Foto retire nan favori'),
+                                'Foto retire nan favori',
+                                false),
                             onToggleLocal: (id) => _toggle(
                                 id,
                                 localIds,
                                 StorageHelper.addLocalPhoto,
                                 StorageHelper.removeLocalPhoto,
-                                'Foto ajoute nan lokal',
-                                'Foto retire nan lokal'),
+                                'Foto ajoute nan lokal ✓',
+                                'Foto retire nan lokal',
+                                true),
                           ),
                         ),
-                      ),
+                      ).then((_) => _loadSavedData()),
                       child: _PhotoGridTile(
                           photo: photo,
                           isFavorite: favoriteIds.contains(id),
@@ -516,14 +563,16 @@ class _PhotoScreenState extends State<PhotoScreen> {
                               StorageHelper.addFavorite,
                               StorageHelper.removeFavorite,
                               'Foto ajoute nan favori',
-                              'Foto retire nan favori'),
+                              'Foto retire nan favori',
+                              false),
                           onLocalTap: () => _toggle(
                               id,
                               localIds,
                               StorageHelper.addLocalPhoto,
                               StorageHelper.removeLocalPhoto,
-                              'Foto ajoute nan lokal',
-                              'Foto retire nan lokal')),
+                              'Foto ajoute nan lokal ✓',
+                              'Foto retire nan lokal',
+                              true)),
                     );
                   },
                 ),
@@ -564,17 +613,17 @@ class _PhotoGridTile extends StatelessWidget {
               left: 0,
               right: 0,
               child: Container(
-                  height: 16,
+                  height: 20,
                   decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.5)
+                    Colors.black.withOpacity(0.6)
                   ], begin: Alignment.topCenter, end: Alignment.bottomCenter))),
             ),
             Positioned(
-              bottom: 1,
-              left: 1,
-              right: 1,
+              bottom: 2,
+              left: 2,
+              right: 2,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -611,25 +660,28 @@ class _MiniIconBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-          padding: const EdgeInsets.all(1),
+          padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3), shape: BoxShape.circle),
-          child: Icon(icon, color: color, size: 10)),
+              color: Colors.black.withOpacity(0.4), shape: BoxShape.circle),
+          child: Icon(icon, color: color, size: 14)),
     );
   }
 }
 
-// ==================== PHOTO DETAIL ====================
+// ==================== PHOTO DETAIL  ====================
 class PhotoDetailScreen extends StatefulWidget {
-  final Photo photo;
-  final bool isFavorite, isLocal;
+  final List<Photo> photos;
+  final int initialIndex;
+  final Set<String> favoriteIds;
+  final Set<String> localIds;
   final Function(String) onToggleFavorite, onToggleLocal;
 
   const PhotoDetailScreen(
       {super.key,
-      required this.photo,
-      required this.isFavorite,
-      required this.isLocal,
+      required this.photos,
+      required this.initialIndex,
+      required this.favoriteIds,
+      required this.localIds,
       required this.onToggleFavorite,
       required this.onToggleLocal});
 
@@ -638,13 +690,51 @@ class PhotoDetailScreen extends StatefulWidget {
 }
 
 class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
-  late bool _isFavorite, _isLocal;
+  late PageController _pageController;
+  late int _currentIndex;
+  late Set<String> _favoriteIds;
+  late Set<String> _localIds;
 
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.isFavorite;
-    _isLocal = widget.isLocal;
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+    _favoriteIds = Set.from(widget.favoriteIds);
+    _localIds = Set.from(widget.localIds);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Photo get _currentPhoto => widget.photos[_currentIndex];
+  String get _currentId => _currentPhoto.id.toString();
+  bool get _isFavorite => _favoriteIds.contains(_currentId);
+  bool get _isLocal => _localIds.contains(_currentId);
+
+  void _toggleFavorite() {
+    setState(() {
+      if (_isFavorite) {
+        _favoriteIds.remove(_currentId);
+      } else {
+        _favoriteIds.add(_currentId);
+      }
+    });
+    widget.onToggleFavorite(_currentId);
+  }
+
+  void _toggleLocal() {
+    setState(() {
+      if (_isLocal) {
+        _localIds.remove(_currentId);
+      } else {
+        _localIds.add(_currentId);
+      }
+    });
+    widget.onToggleLocal(_currentId);
   }
 
   @override
@@ -652,38 +742,58 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black87,
         elevation: 0,
         leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context)),
+        title: Text('${_currentIndex + 1} / ${widget.photos.length}',
+            style: const TextStyle(color: Colors.white70, fontSize: 16)),
         actions: [
           IconButton(
             icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorite ? Colors.red : Colors.white, size: 28),
-            onPressed: () {
-              setState(() => _isFavorite = !_isFavorite);
-              widget.onToggleFavorite(widget.photo.id.toString());
-            },
+                color: _isFavorite ? Colors.red : Colors.white, size: 32),
+            onPressed: _toggleFavorite,
           ),
           IconButton(
             icon: Icon(_isLocal ? Icons.check_circle : Icons.add_circle_outline,
-                color: _isLocal ? Colors.green : Colors.white, size: 28),
-            onPressed: () {
-              setState(() => _isLocal = !_isLocal);
-              widget.onToggleLocal(widget.photo.id.toString());
-            },
+                color: _isLocal ? Colors.green : Colors.white, size: 32),
+            onPressed: _toggleLocal,
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Center(
-          child: InteractiveViewer(
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.photos.length,
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        itemBuilder: (context, index) {
+          final photo = widget.photos[index];
+          return Center(
+            child: InteractiveViewer(
               panEnabled: true,
               minScale: 0.5,
               maxScale: 4.0,
               child: Image.network(
-                  widget.photo.src.replaceFirst('medium', 'large'),
-                  fit: BoxFit.contain))),
+                photo.src.replaceFirst('medium', 'large'),
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      color: kPrimaryColor,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -893,7 +1003,7 @@ class ProfileScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: kPrimaryColor)),
             const SizedBox(height: 8),
-            Text('Vèsyon 1.1.0',
+            Text('Vèsyon 1.2.0',
                 style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
             const SizedBox(height: 40),
             Container(

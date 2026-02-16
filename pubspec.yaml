@@ -38,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # HTTP package for making API requests
-  http: ^0.13.6
+  http: ^1.1.0
   image_picker: ^1.0.4
     
   hive: ^2.2.3
@@ -47,9 +47,12 @@ dependencies:
 
   # Secure local storage
   flutter_secure_storage: ^10.0.0
+  image_gallery_saver: ^2.0.3
+
 
   # Local key-value storage
   shared_preferences: ^2.2.2
+  permission_handler: ^11.1.0
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +64,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
