@@ -1,4 +1,4 @@
-# galri_mwa
+# Mwa Galri
 
 A new Flutter project.
 
