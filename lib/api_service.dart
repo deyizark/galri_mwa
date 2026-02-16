@@ -4,7 +4,8 @@ import 'dart:convert';
 class APIService {
 
   static Future<dynamic> get(String url) async {
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(
+        Uri.parse(url), headers: {"Authorization": "hTXh78ukeUKPNCVMXM4uRIMGTxb8vYeXCN1JYrm8YQfFIlS6XCh9Rej5"});
 
     if (response.statusCode == 200) {
       return json.decode(response.body);

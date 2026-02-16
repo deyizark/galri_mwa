@@ -16,7 +16,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
   final url = "https://api.pexels.com/v1/curated";
   List allInfo = [];
   List<Photo> allPhotos = [];
-  List<Photographer> AllPhotographers = [];
+  // List<Photographer> AllPhotographers = [];
 
 
   void getAllPhotosAndPhotographer() async {
@@ -35,12 +35,12 @@ class _PhotoScreenState extends State<PhotoScreen> {
         );
       }).toList();
 
-      AllPhotographers = data.map((item) {
-        return Photographer(
-          photographerId: item["photographer_id"],
-          photographer: item["photographer"],
-        );
-      }).toList();
+      // AllPhotographers = data.map((item) {
+      //   return Photographer(
+      //     photographerId: item["photographer_id"],
+      //     photographer: item["photographer"],
+      //   );
+      // }).toList();
     });
   }
 
