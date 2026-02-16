@@ -5,7 +5,7 @@ import 'api_service.dart';
 import 'models.dart';
 import 'storage_helper.dart';
 
-// Pou download foto
+
 import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -100,12 +100,12 @@ class _SplashScreenState extends State<SplashScreen>
                           spreadRadius: 5)
                     ],
                   ),
-                  child: const Icon(Icons.photo_camera,
-                      size: 80, color: kPrimaryColor),
+                  
+                  child: Image.asset('assets/images/mwa-logo.png', width: 80, height: 80),
                 ),
               ),
               const SizedBox(height: 30),
-              const Text('App Foto',
+              const Text('MWA Galri',
                   style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                             offset: Offset(2, 2))
                       ])),
               const SizedBox(height: 10),
-              const Text('Pexels Gallery',
+              const Text('Bèl foto ki sou pexels',
                   style: TextStyle(fontSize: 18, color: Colors.white70)),
             ],
           ),
@@ -262,7 +262,7 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                     border: InputBorder.none),
                 onChanged: _filter,
               )
-            : const Text('Fotograf yo'),
+            : const Text('Fotograf yo', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),),
         actions: [
           IconButton(
               icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -308,7 +308,7 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
     } catch (_) {
       if (mounted) {
         Navigator.pop(context);
-        _showMsg('Pa ka chaje tout foto yo');
+        _showMsg('Pa ka telechaje tout foto yo');
       }
     }
   }
@@ -666,7 +666,11 @@ class _MiniIconBtn extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
 // ==================== PHOTO DETAIL (AVEC SWIPE) ====================
+=======
+// PHOTO DETAIL
+>>>>>>> dfbadd580a04dbae18259844e13fe251494b7bf7
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
   final int initialIndex;
@@ -796,12 +800,12 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
   }
 }
 
-// ==================== FAVORI & LOKAL ====================
+// FAVORI ak LOKAL
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
   @override
   Widget build(BuildContext context) => const PhotoCollectionScreen(
-      title: 'Favori mwen',
+      title: 'Favori',
       load: StorageHelper.getFavoritePhotos,
       loadIds: StorageHelper.getFavoriteIds,
       remove: StorageHelper.removeFavorite,
@@ -968,7 +972,7 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-// ==================== PWOFIL ====================
+// APWOPO
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
