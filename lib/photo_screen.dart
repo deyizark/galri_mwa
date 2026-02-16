@@ -12,10 +12,10 @@ class PhotoScreen extends StatefulWidget {
 
 class _PhotoScreenState extends State<PhotoScreen> {
   final List<Photo> allPhotos = [
-    Photo(id: "1", url: "https://picsum.photos/300", photographerId: "1"),
-    Photo(id: "2", url: "https://picsum.photos/301", photographerId: "1"),
-    Photo(id: "3", url: "https://picsum.photos/302", photographerId: "1"),
-    Photo(id: "4", url: "https://picsum.photos/303", photographerId: "2"),
+    Photo(id: 1, url: "https://picsum.photos/300", photographerId: 1),
+    Photo(id: 2, url: "https://picsum.photos/301", photographerId: 1),
+    Photo(id: 3, url: "https://picsum.photos/302", photographerId: 1),
+    Photo(id: 4, url: "https://picsum.photos/303", photographerId: 2),
   ];
 
   final Set<String> favoritePhotos = {};
@@ -115,10 +115,10 @@ class _PhotoScreenState extends State<PhotoScreen> {
                               onPressed: () {
                                 setState(() {
                                   if (isFavorite) {
-                                    favoritePhotos.remove(photo.id);
+                                    favoritePhotos.remove(photo.id.toString());
                                     showMessage("Foto retire nan favori");
                                   } else {
-                                    favoritePhotos.add(photo.id);
+                                    favoritePhotos.add(photo.id.toString());
                                     showMessage("Foto ajoute nan favori");
                                   }
                                 });
@@ -138,10 +138,10 @@ class _PhotoScreenState extends State<PhotoScreen> {
                               onPressed: () {
                                 setState(() {
                                   if (isLocal) {
-                                    localPhotos.remove(photo.id);
+                                    localPhotos.remove(photo.id.toString());
                                     showMessage("Foto retire nan lokal");
                                   } else {
-                                    localPhotos.add(photo.id);
+                                    localPhotos.add(photo.id.toString());
                                     showMessage("Foto ajoute nan lokal");
                                   }
                                 });
