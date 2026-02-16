@@ -782,3 +782,362 @@ class _PhotoScreenState extends State<PhotoScreen> {
     );
   }
 }
+
+// EKRAN FAVORI
+class FavoritesScreen extends StatefulWidget {
+  const FavoritesScreen({super.key});
+
+  @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  List<Photo> favoritePhotos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final photos = await StorageHelper.getFavoritePhotos();
+
+      setState(() {
+        favoritePhotos = photos;
+        _isLoading = false;
+      });
+
+      debugPrint('📸 Favorites loaded: ${photos.length} photos');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showMessage('Pa ka chaje foto favori yo');
+      debugPrint(' Error loading favorites: $e');
+    }
+  }
+
+  Future<void> _removeFavorite(String id) async {
+    await StorageHelper.removeFavorite(id);
+    await _loadFavorites();
+    _showMessage('Foto retire nan favori');
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Favori mwen (${favoritePhotos.length})'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : favoritePhotos.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_border,
+                size: 80, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Pa gen foto favori',
+              style: TextStyle(
+                  fontSize: 18, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      )
+          : GridView.builder(
+        padding: const EdgeInsets.all(4),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          childAspectRatio: 1,
+        ),
+        itemCount: favoritePhotos.length,
+        itemBuilder: (context, index) {
+          final photo = favoritePhotos[index];
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(
+                  photo.src,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.broken_image, size: 20),
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.delete,
+                        color: Colors.red, size: 14),
+                    onPressed: () =>
+                        _removeFavorite(photo.id.toString()),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                        width: 22, height: 22),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ==================== EKRAN LOKAL  ====================
+class LocalScreen extends StatefulWidget {
+  const LocalScreen({super.key});
+
+  @override
+  State<LocalScreen> createState() => _LocalScreenState();
+}
+
+class _LocalScreenState extends State<LocalScreen> {
+  List<Photo> localPhotos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocalPhotos();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadLocalPhotos();
+  }
+
+  Future<void> _loadLocalPhotos() async {
+    setState(() => _isLoading = true);
+
+    try {
+
+      final photos = await StorageHelper.getLocalPhotos();
+
+      setState(() {
+        localPhotos = photos;
+        _isLoading = false;
+      });
+
+      debugPrint(' Local photos loaded: ${photos.length} photos');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showMessage('Pa ka chaje foto lokal yo');
+      debugPrint(' Error loading local photos: $e');
+    }
+  }
+
+  Future<void> _removeLocal(String id) async {
+    await StorageHelper.removeLocalPhoto(id);
+    await _loadLocalPhotos();
+    _showMessage('Foto retire nan lokal');
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Foto lokal (${localPhotos.length})'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : localPhotos.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_open,
+                size: 80, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Pa gen foto lokal',
+              style: TextStyle(
+                  fontSize: 18, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      )
+          : GridView.builder(
+        padding: const EdgeInsets.all(4),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          childAspectRatio: 1,
+        ),
+        itemCount: localPhotos.length,
+        itemBuilder: (context, index) {
+          final photo = localPhotos[index];
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(
+                  photo.src,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.broken_image, size: 20),
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.delete,
+                        color: Colors.red, size: 14),
+                    onPressed: () =>
+                        _removeLocal(photo.id.toString()),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                        width: 22, height: 22),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// EKRAN PWOFIL
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pwofil'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1976D2), Color(0xFF64B5F6)],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.person,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'App Foto',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Vèsyon 1.1.0',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Container(
+              width: 280,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const ListTile(
+                    leading: Icon(Icons.info, color: Color(0xFF1976D2)),
+                    title: Text('Sou app la'),
+                    subtitle: Text('App Pexels pou gade foto'),
+                  ),
+                  const Divider(),
+                  const ListTile(
+                    leading: Icon(Icons.settings, color: Color(0xFF1976D2)),
+                    title: Text('API Key'),
+                    subtitle: Text('Pexels API'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
