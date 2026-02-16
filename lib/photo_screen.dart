@@ -16,6 +16,8 @@ class _PhotoScreenState extends State<PhotoScreen> {
   final url = "https://api.pexels.com/v1/curated";
   List allInfo = [];
   List<Photo> allPhotos = [];
+  final Set<String> favoritePhotos = {};
+  final Set<String> localPhotos = {};
   // List<Photographer> AllPhotographers = [];
 
 
@@ -59,8 +61,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
   //   Photo(id: 4, url: "https://picsum.photos/303", photographerId: 2),
   // ];
 
-  final Set<String> favoritePhotos = {};
-  final Set<String> localPhotos = {};
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -105,8 +105,8 @@ class _PhotoScreenState extends State<PhotoScreen> {
         ),
         itemBuilder: (context, index) {
           final photo = photos[index];
-          final isFavorite = favoritePhotos.contains(photo.id);
-          final isLocal = localPhotos.contains(photo.id);
+          final isFavorite = favoritePhotos.contains(photo.id.toString());
+          final isLocal = localPhotos.contains(photo.id.toString());
 
           return GestureDetector(
             child: AnimatedContainer(

@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   vertical: 10,
                 ),
                 child: GridView.builder(
-                  itemCount: photographers.length,
+                  itemCount: allPhotographers.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 12,
@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     childAspectRatio: 0.85,
                   ),
                   itemBuilder: (context, index) {
-                    final photographer = photographers[index];
+                    final photographer = AllPhotographers[index];
 
                     return GestureDetector(
                       onTap: () {
