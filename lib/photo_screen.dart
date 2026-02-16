@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models.dart';
+import 'api_service.dart';
 
 class PhotoScreen extends StatefulWidget {
   final Photographer photographer;
@@ -11,12 +12,52 @@ class PhotoScreen extends StatefulWidget {
 }
 
 class _PhotoScreenState extends State<PhotoScreen> {
-  final List<Photo> allPhotos = [
-    Photo(id: 1, url: "https://picsum.photos/300", photographerId: 1),
-    Photo(id: 2, url: "https://picsum.photos/301", photographerId: 1),
-    Photo(id: 3, url: "https://picsum.photos/302", photographerId: 1),
-    Photo(id: 4, url: "https://picsum.photos/303", photographerId: 2),
-  ];
+
+  final url = "https://api.pexels.com/v1/curated";
+  List allInfo = [];
+  List<Photo> allPhotos = [];
+  List<Photographer> AllPhotographers = [];
+
+
+  void getAllPhotosAndPhotographer() async {
+    dynamic info = await APIService.get(url);
+
+    List data = info["photos"];
+
+    setState(() {
+      allInfo = info;
+
+      allPhotos = data.map((item) {
+        return Photo(
+          id: item["id"],
+          url: item["src"]["original"],
+          photographerId: item["photographer_id"],
+        );
+      }).toList();
+
+      AllPhotographers = data.map((item) {
+        return Photographer(
+          photographerId: item["photographer_id"],
+          photographer: item["photographer"],
+        );
+      }).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getAllPhotosAndPhotographer();
+  }
+
+  @override
+
+  // final List<Photo> allPhotos = [
+  //   Photo(id: 1, url: "https://picsum.photos/300", photographerId: 1),
+  //   Photo(id: 2, url: "https://picsum.photos/301", photographerId: 1),
+  //   Photo(id: 3, url: "https://picsum.photos/302", photographerId: 1),
+  //   Photo(id: 4, url: "https://picsum.photos/303", photographerId: 2),
+  // ];
 
   final Set<String> favoritePhotos = {};
   final Set<String> localPhotos = {};
