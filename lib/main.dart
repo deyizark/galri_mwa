@@ -3,6 +3,10 @@ import 'api_service.dart';
 import 'models.dart';
 import 'storage_helper.dart';
 
+const _kPrimaryColor = Color(0xFF1976D2);
+const _kSecondaryColor = Color(0xFF64B5F6);
+const _kBlueGradient = [Color(0xFF1976D2), Color(0xFF64B5F6)];
+
 void main() {
   runApp(const MyApp());
 }
@@ -50,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1976D2), Color(0xFF64B5F6)],
+            colors: _kBlueGradient,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -78,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: const Icon(
                     Icons.photo_camera,
                     size: 80,
-                    color: Color(0xFF1976D2),
+                    color: _kPrimaryColor,
                   ),
                 ),
               ),
@@ -101,10 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 10),
               const Text(
                 'Pexels Gallery',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white70,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.white70),
               ),
             ],
           ),
@@ -129,7 +130,7 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           elevation: 0,
           centerTitle: true,
-          backgroundColor: Color(0xFF1976D2),
+          backgroundColor: _kPrimaryColor,
         ),
       ),
       home: const SplashScreen(),
@@ -163,11 +164,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF1976D2),
+        selectedItemColor: _kPrimaryColor,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.photo_library), label: 'Fotograf'),
+            icon: Icon(Icons.photo_library),
+            label: 'Fotograf',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favori'),
           BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Lokal'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Pwofil'),
@@ -186,8 +189,8 @@ class PhotographersScreen extends StatefulWidget {
 }
 
 class _PhotographersScreenState extends State<PhotographersScreen> {
-  Map<int, Photographer> _photographers = {};
-  Map<int, List<Photo>> _photographerPhotos = {};
+  final Map<int, Photographer> _photographers = {};
+  final Map<int, List<Photo>> _photographerPhotos = {};
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   List<Photographer> _filteredPhotographers = [];
@@ -205,15 +208,17 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
       final photos = await APIService.getCuratedPhotos(perPage: 80);
 
       for (var photo in photos) {
-        if (!_photographers.containsKey(photo.photographerId)) {
-          _photographers[photo.photographerId] = Photographer(
+        _photographers.putIfAbsent(
+          photo.photographerId,
+          () => Photographer(
             photographerId: photo.photographerId,
             photographer: photo.photographer,
             photographerUrl: photo.photographerUrl,
-          );
-          _photographerPhotos[photo.photographerId] = [];
-        }
-        _photographerPhotos[photo.photographerId]?.add(photo);
+          ),
+        );
+        _photographerPhotos
+            .putIfAbsent(photo.photographerId, () => [])
+            .add(photo);
       }
 
       for (var photographer in _photographers.values) {
@@ -239,9 +244,30 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  void _filterPhotographers(String query) {
+    final normalizedQuery = query.toLowerCase();
+    setState(() {
+      _filteredPhotographers = query.isEmpty
+          ? _photographers.values.toList()
+          : _photographers.values
+              .where(
+                (p) => p.photographer.toLowerCase().contains(normalizedQuery),
+              )
+              .toList();
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        _filteredPhotographers = _photographers.values.toList();
+      }
+    });
   }
 
   @override
@@ -257,33 +283,13 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                   hintStyle: TextStyle(color: Colors.white70),
                   border: InputBorder.none,
                 ),
-                onChanged: (query) {
-                  setState(() {
-                    if (query.isEmpty) {
-                      _filteredPhotographers = _photographers.values.toList();
-                    } else {
-                      _filteredPhotographers = _photographers.values
-                          .where((p) => p.photographer
-                              .toLowerCase()
-                              .contains(query.toLowerCase()))
-                          .toList();
-                    }
-                  });
-                },
+                onChanged: _filterPhotographers,
               )
             : const Text('Fotograf yo'),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) {
-                  _searchController.clear();
-                  _filteredPhotographers = _photographers.values.toList();
-                }
-              });
-            },
+            onPressed: _toggleSearch,
           ),
         ],
       ),
@@ -308,9 +314,8 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                       showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (context) => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                        builder: (context) =>
+                            const Center(child: CircularProgressIndicator()),
                       );
 
                       try {
@@ -352,10 +357,7 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                                 height: 50,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF1976D2),
-                                      Color(0xFF64B5F6)
-                                    ],
+                                    colors: _kBlueGradient,
                                   ),
                                   shape: BoxShape.circle,
                                 ),
@@ -393,7 +395,7 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                               ),
                               const Icon(
                                 Icons.arrow_forward_ios,
-                                color: Color(0xFF1976D2),
+                                color: _kPrimaryColor,
                                 size: 16,
                               ),
                             ],
@@ -404,8 +406,9 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                             height: 100,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               itemCount: previewPhotos.length > 8
                                   ? 8
                                   : previewPhotos.length,
@@ -553,62 +556,70 @@ class _PhotoScreenState extends State<PhotoScreen> {
   }
 
   Future<void> _loadSavedData() async {
-    final favIds = await StorageHelper.getFavoriteIds();
-    final locIds = await StorageHelper.getLocalPhotoIds();
+    final results = await Future.wait<Set<String>>([
+      StorageHelper.getFavoriteIds(),
+      StorageHelper.getLocalPhotoIds(),
+    ]);
 
     setState(() {
-      favoritePhotos = favIds;
-      localPhotos = locIds;
+      favoritePhotos = results[0];
+      localPhotos = results[1];
       _isLoading = false;
     });
   }
 
-  void _toggleFavorite(String photoId) async {
+  Future<void> _toggleSavedPhoto({
+    required String photoId,
+    required Set<String> targetIds,
+    required Future<void> Function(Photo) addAction,
+    required Future<void> Function(String) removeAction,
+    required String addMessage,
+    required String removeMessage,
+  }) async {
     final photo = photos.firstWhere((p) => p.id.toString() == photoId);
+    final wasPresent = targetIds.contains(photoId);
 
     setState(() {
-      if (favoritePhotos.contains(photoId)) {
-        favoritePhotos.remove(photoId);
+      if (wasPresent) {
+        targetIds.remove(photoId);
       } else {
-        favoritePhotos.add(photoId);
+        targetIds.add(photoId);
       }
     });
 
-    if (favoritePhotos.contains(photoId)) {
-      await StorageHelper.addFavorite(photo);
-      _showMessage('Foto ajoute nan favori');
+    if (wasPresent) {
+      await removeAction(photoId);
+      _showMessage(removeMessage);
     } else {
-      await StorageHelper.removeFavorite(photoId);
-      _showMessage('Foto retire nan favori');
+      await addAction(photo);
+      _showMessage(addMessage);
     }
   }
 
-  void _toggleLocal(String photoId) async {
-    final photo = photos.firstWhere((p) => p.id.toString() == photoId);
+  Future<void> _toggleFavorite(String photoId) => _toggleSavedPhoto(
+        photoId: photoId,
+        targetIds: favoritePhotos,
+        addAction: StorageHelper.addFavorite,
+        removeAction: StorageHelper.removeFavorite,
+        addMessage: 'Foto ajoute nan favori',
+        removeMessage: 'Foto retire nan favori',
+      );
 
-    setState(() {
-      if (localPhotos.contains(photoId)) {
-        localPhotos.remove(photoId);
-      } else {
-        localPhotos.add(photoId);
-      }
-    });
-
-    if (localPhotos.contains(photoId)) {
-      await StorageHelper.addLocalPhoto(photo);
-      _showMessage('Foto ajoute nan lokal');
-    } else {
-      await StorageHelper.removeLocalPhoto(photoId);
-      _showMessage('Foto retire nan lokal');
-    }
-  }
+  Future<void> _toggleLocal(String photoId) => _toggleSavedPhoto(
+        photoId: photoId,
+        targetIds: localPhotos,
+        addAction: StorageHelper.addLocalPhoto,
+        removeAction: StorageHelper.removeLocalPhoto,
+        addMessage: 'Foto ajoute nan lokal',
+        removeMessage: 'Foto retire nan lokal',
+      );
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF1976D2),
+        backgroundColor: _kPrimaryColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 1),
       ),
@@ -636,20 +647,9 @@ class _PhotoScreenState extends State<PhotoScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : photos.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.photo_library_outlined,
-                          size: 80, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Pa gen foto',
-                        style: TextStyle(
-                            fontSize: 18, color: Colors.grey.shade600),
-                      ),
-                    ],
-                  ),
+              ? const _EmptyState(
+                  icon: Icons.photo_library_outlined,
+                  text: 'Pa gen foto',
                 )
               : GridView.builder(
                   padding: const EdgeInsets.all(4),
@@ -662,9 +662,9 @@ class _PhotoScreenState extends State<PhotoScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final photo = photos[index];
-                    final isFavorite =
-                        favoritePhotos.contains(photo.id.toString());
-                    final isLocal = localPhotos.contains(photo.id.toString());
+                    final photoId = photo.id.toString();
+                    final isFavorite = favoritePhotos.contains(photoId);
+                    final isLocal = localPhotos.contains(photoId);
 
                     return GestureDetector(
                       onTap: () {
@@ -697,10 +697,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              Image.network(
-                                photo.src,
-                                fit: BoxFit.cover,
-                              ),
+                              Image.network(photo.src, fit: BoxFit.cover),
                               Positioned(
                                 bottom: 0,
                                 left: 0,
@@ -711,7 +708,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                                     gradient: LinearGradient(
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black.withOpacity(0.5)
+                                        Colors.black.withOpacity(0.5),
                                       ],
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
@@ -734,8 +731,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                                       color: isFavorite
                                           ? Colors.red
                                           : Colors.white,
-                                      onPressed: () =>
-                                          _toggleFavorite(photo.id.toString()),
+                                      onPressed: () => _toggleFavorite(photoId),
                                     ),
                                     _buildMiniIconButton(
                                       icon: isLocal
@@ -744,8 +740,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                                       color: isLocal
                                           ? Colors.greenAccent
                                           : Colors.white,
-                                      onPressed: () =>
-                                          _toggleLocal(photo.id.toString()),
+                                      onPressed: () => _toggleLocal(photoId),
                                     ),
                                   ],
                                 ),
@@ -773,285 +768,207 @@ class _PhotoScreenState extends State<PhotoScreen> {
           color: Colors.black.withOpacity(0.3),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 10,
-        ),
+        child: Icon(icon, color: color, size: 10),
       ),
     );
   }
 }
 
-// EKRAN FAVORI
-class FavoritesScreen extends StatefulWidget {
+// ==================== EKRAN FAVORI ====================
+class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
-
-  @override
-  State<FavoritesScreen> createState() => _FavoritesScreenState();
-}
-
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Photo> favoritePhotos = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorites();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadFavorites();
-  }
-
-  Future<void> _loadFavorites() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final photos = await StorageHelper.getFavoritePhotos();
-
-      setState(() {
-        favoritePhotos = photos;
-        _isLoading = false;
-      });
-
-      debugPrint('📸 Favorites loaded: ${photos.length} photos');
-    } catch (e) {
-      setState(() => _isLoading = false);
-      _showMessage('Pa ka chaje foto favori yo');
-      debugPrint(' Error loading favorites: $e');
-    }
-  }
-
-  Future<void> _removeFavorite(String id) async {
-    await StorageHelper.removeFavorite(id);
-    await _loadFavorites();
-    _showMessage('Foto retire nan favori');
-  }
-
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Favori mwen (${favoritePhotos.length})'),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : favoritePhotos.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.favorite_border,
-                size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'Pa gen foto favori',
-              style: TextStyle(
-                  fontSize: 18, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      )
-          : GridView.builder(
-        padding: const EdgeInsets.all(4),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          childAspectRatio: 1,
-        ),
-        itemCount: favoritePhotos.length,
-        itemBuilder: (context, index) {
-          final photo = favoritePhotos[index];
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Image.network(
-                  photo.src,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.broken_image, size: 20),
-                    );
-                  },
-                ),
-              ),
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.delete,
-                        color: Colors.red, size: 14),
-                    onPressed: () =>
-                        _removeFavorite(photo.id.toString()),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                        width: 22, height: 22),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+    return const _PhotoCollectionScreen(
+      titlePrefix: 'Favori mwen',
+      loadPhotos: StorageHelper.getFavoritePhotos,
+      loadIds: StorageHelper.getFavoriteIds,
+      removePhoto: StorageHelper.removeFavorite,
+      emptyIcon: Icons.favorite_border,
+      emptyText: 'Pa gen foto favori',
+      loadErrorText: 'Pa ka chaje foto favori yo',
+      removeSuccessText: 'Foto retire nan favori',
     );
   }
 }
 
-// ==================== EKRAN LOKAL  ====================
-class LocalScreen extends StatefulWidget {
+// ==================== EKRAN LOKAL ====================
+class LocalScreen extends StatelessWidget {
   const LocalScreen({super.key});
-
   @override
-  State<LocalScreen> createState() => _LocalScreenState();
+  Widget build(BuildContext context) {
+    return const _PhotoCollectionScreen(
+      titlePrefix: 'Foto lokal',
+      loadPhotos: StorageHelper.getLocalPhotos,
+      loadIds: StorageHelper.getLocalPhotoIds,
+      removePhoto: StorageHelper.removeLocalPhoto,
+      emptyIcon: Icons.folder_open,
+      emptyText: 'Pa gen foto lokal',
+      loadErrorText: 'Pa ka chaje foto lokal yo',
+      removeSuccessText: 'Foto retire nan lokal',
+    );
+  }
 }
 
-class _LocalScreenState extends State<LocalScreen> {
-  List<Photo> localPhotos = [];
+class _PhotoCollectionScreen extends StatefulWidget {
+  final String titlePrefix;
+  final Future<List<Photo>> Function() loadPhotos;
+  final Future<Set<String>> Function() loadIds;
+  final Future<void> Function(String) removePhoto;
+  final IconData emptyIcon;
+  final String emptyText;
+  final String loadErrorText;
+  final String removeSuccessText;
+
+  const _PhotoCollectionScreen({
+    required this.titlePrefix,
+    required this.loadPhotos,
+    required this.loadIds,
+    required this.removePhoto,
+    required this.emptyIcon,
+    required this.emptyText,
+    required this.loadErrorText,
+    required this.removeSuccessText,
+  });
+
+  @override
+  State<_PhotoCollectionScreen> createState() => _PhotoCollectionScreenState();
+}
+
+class _PhotoCollectionScreenState extends State<_PhotoCollectionScreen> {
+  List<Photo> _photos = [];
+  Set<String> _ids = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadLocalPhotos();
+    _load();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadLocalPhotos();
+    _load();
   }
 
-  Future<void> _loadLocalPhotos() async {
+  Future<void> _load() async {
     setState(() => _isLoading = true);
-
     try {
-
-      final photos = await StorageHelper.getLocalPhotos();
-
+      final photos = await widget.loadPhotos();
+      final ids = await widget.loadIds();
       setState(() {
-        localPhotos = photos;
+        _photos = photos;
+        _ids = ids;
         _isLoading = false;
       });
-
-      debugPrint(' Local photos loaded: ${photos.length} photos');
-    } catch (e) {
+    } catch (_) {
       setState(() => _isLoading = false);
-      _showMessage('Pa ka chaje foto lokal yo');
-      debugPrint(' Error loading local photos: $e');
+      _showMessage(widget.loadErrorText);
     }
   }
 
-  Future<void> _removeLocal(String id) async {
-    await StorageHelper.removeLocalPhoto(id);
-    await _loadLocalPhotos();
-    _showMessage('Foto retire nan lokal');
+  Future<void> _remove(String id) async {
+    await widget.removePhoto(id);
+    await _load();
+    _showMessage(widget.removeSuccessText);
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Foto lokal (${localPhotos.length})'),
-      ),
+      appBar: AppBar(title: Text('${widget.titlePrefix} (${_ids.length})')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : localPhotos.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.folder_open,
-                size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'Pa gen foto lokal',
-              style: TextStyle(
-                  fontSize: 18, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      )
-          : GridView.builder(
-        padding: const EdgeInsets.all(4),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          childAspectRatio: 1,
-        ),
-        itemCount: localPhotos.length,
-        itemBuilder: (context, index) {
-          final photo = localPhotos[index];
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Image.network(
-                  photo.src,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.broken_image, size: 20),
+          : _ids.isEmpty
+              ? _EmptyState(
+                  icon: widget.emptyIcon,
+                  text: widget.emptyText,
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(6),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 6,
+                    mainAxisSpacing: 6,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: _photos.length,
+                  itemBuilder: (context, index) {
+                    final photo = _photos[index];
+                    return _PhotoGridItem(
+                      photo: photo,
+                      onDelete: () => _remove(photo.id.toString()),
                     );
                   },
                 ),
-              ),
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.delete,
-                        color: Colors.red, size: 14),
-                    onPressed: () =>
-                        _removeLocal(photo.id.toString()),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                        width: 22, height: 22),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+    );
+  }
+}
+
+class _PhotoGridItem extends StatelessWidget {
+  final Photo photo;
+  final VoidCallback onDelete;
+
+  const _PhotoGridItem({required this.photo, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.network(photo.src, fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: 2,
+          right: 2,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red, size: 14),
+              onPressed: onDelete,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 22, height: 22),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _EmptyState({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(text,
+              style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+        ],
       ),
     );
   }
 }
 
 // EKRAN PWOFIL
-
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 

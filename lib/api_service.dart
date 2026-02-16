@@ -20,24 +20,22 @@ class APIService {
     }
   }
 
+  static Future<List<Photo>> _getPhotos(String endpoint) async {
+    final data = await get(endpoint);
+    return (data["photos"] as List).map((item) => Photo.fromJson(item)).toList();
+  }
+
   static Future<List<Photo>> getCuratedPhotos({
     int page = 1,
     int perPage = 30,
-  }) async {
-    final data = await get("/curated?page=$page&per_page=$perPage");
-    List photos = data["photos"];
-    return photos.map((item) => Photo.fromJson(item)).toList();
-  }
+  }) => _getPhotos("/curated?page=$page&per_page=$perPage");
 
   static Future<List<Photo>> getAllPhotosByPhotographer(
-      String query, {
-        int page = 1,
-        int perPage = 80,
-      }) async {
-    final data = await get("/search?query=$query&page=$page&per_page=$perPage");
-    List photos = data["photos"];
-    return photos.map((item) => Photo.fromJson(item)).toList();
-  }
+    String query, {
+    int page = 1,
+    int perPage = 80,
+  }) =>
+      _getPhotos("/search?query=$query&page=$page&per_page=$perPage");
 
   static Future<int> getPhotographerPhotoCount(String query) async {
     final data = await get("/search?query=$query&page=1&per_page=1");

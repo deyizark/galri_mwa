@@ -11,13 +11,11 @@ class Photographer {
     this.totalPhotos = 0,
   });
 
-  factory Photographer.fromJson(Map<String, dynamic> json) {
-    return Photographer(
-      photographerId: json['photographer_id'],
-      photographer: json['photographer'],
-      photographerUrl: json['photographer_url'],
-    );
-  }
+  factory Photographer.fromJson(Map<String, dynamic> json) => Photographer(
+        photographerId: json['photographer_id'],
+        photographer: json['photographer'],
+        photographerUrl: json['photographer_url'],
+      );
 }
 
 class Photo {
@@ -37,14 +35,21 @@ class Photo {
     required this.src,
   });
 
-  factory Photo.fromJson(Map<String, dynamic> json) {
-    return Photo(
-      id: json['id'],
-      photographerId: json['photographer_id'],
-      photographer: json['photographer'],
-      photographerUrl: json['photographer_url'],
-      url: json['url'],
-      src: json['src']['medium'],
-    );
-  }
+  factory Photo.fromJson(Map<String, dynamic> json) => Photo(
+        id: json['id'],
+        photographerId: json['photographer_id'],
+        photographer: json['photographer'],
+        photographerUrl: json['photographer_url'],
+        url: json['url'],
+        src: json['src']['medium'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'photographer_id': photographerId,
+        'photographer': photographer,
+        'photographer_url': photographerUrl,
+        'url': url,
+        'src': {'medium': src},
+      };
 }

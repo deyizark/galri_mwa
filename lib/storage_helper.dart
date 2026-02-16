@@ -1,132 +1,67 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'models.dart';
 
 class StorageHelper {
   static const String _favoritesKey = 'favorites';
   static const String _localKey = 'local_photos';
 
-  // FAVORI
-  static Future<List<Photo>> getFavoritePhotos() async {
+  static Future<List<Photo>> _getPhotos(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonList = prefs.getStringList(_favoritesKey) ?? [];
-    return jsonList.map((jsonStr) {
-      final json = jsonDecode(jsonStr);
-      return Photo.fromJson(json);
-    }).toList();
-  }
-
-  static Future<void> addFavorite(Photo photo) async {
-    final prefs = await SharedPreferences.getInstance();
-    final favorites = await getFavoritePhotos();
-
-    if (!favorites.any((p) => p.id == photo.id)) {
-      favorites.add(photo);
-      final jsonList = favorites
-          .map(
-            (p) => jsonEncode({
-          'id': p.id,
-          'photographer_id': p.photographerId,
-          'photographer': p.photographer,
-          'photographer_url': p.photographerUrl,
-          'url': p.url,
-          'src': {'medium': p.src},
-        }),
-      )
-          .toList();
-      await prefs.setStringList(_favoritesKey, jsonList);
-    }
-  }
-
-  static Future<void> removeFavorite(String photoId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final favorites = await getFavoritePhotos();
-    favorites.removeWhere((p) => p.id.toString() == photoId);
-
-    final jsonList = favorites
-        .map(
-          (p) => jsonEncode({
-        'id': p.id,
-        'photographer_id': p.photographerId,
-        'photographer': p.photographer,
-        'photographer_url': p.photographerUrl,
-        'url': p.url,
-        'src': {'medium': p.src},
-      }),
-    )
+    return (prefs.getStringList(key) ?? [])
+        .map((s) => Photo.fromJson(jsonDecode(s)))
         .toList();
-    await prefs.setStringList(_favoritesKey, jsonList);
   }
 
-  static Future<bool> isFavorite(String photoId) async {
-    final favorites = await getFavoritePhotos();
-    return favorites.any((p) => p.id.toString() == photoId);
-  }
-
-  static Future<Set<String>> getFavoriteIds() async {
-    final favorites = await getFavoritePhotos();
-    return favorites.map((p) => p.id.toString()).toSet();
-  }
-
-  // LOKAL
-  static Future<List<Photo>> getLocalPhotos() async {
+  static Future<void> _savePhotos(String key, List<Photo> photos) async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonList = prefs.getStringList(_localKey) ?? [];
-    return jsonList.map((jsonStr) {
-      final json = jsonDecode(jsonStr);
-      return Photo.fromJson(json);
-    }).toList();
+    await prefs.setStringList(
+      key,
+      photos.map((p) => jsonEncode(p.toJson())).toList(),
+    );
   }
 
-  static Future<void> addLocalPhoto(Photo photo) async {
-    final prefs = await SharedPreferences.getInstance();
-    final localPhotos = await getLocalPhotos();
-
-    if (!localPhotos.any((p) => p.id == photo.id)) {
-      localPhotos.add(photo);
-      final jsonList = localPhotos
-          .map(
-            (p) => jsonEncode({
-          'id': p.id,
-          'photographer_id': p.photographerId,
-          'photographer': p.photographer,
-          'photographer_url': p.photographerUrl,
-          'url': p.url,
-          'src': {'medium': p.src},
-        }),
-      )
-          .toList();
-      await prefs.setStringList(_localKey, jsonList);
-    }
+  static Future<void> _addPhoto(String key, Photo photo) async {
+    final photos = await _getPhotos(key);
+    if (photos.any((p) => p.id == photo.id)) return;
+    photos.add(photo);
+    await _savePhotos(key, photos);
   }
 
-  static Future<void> removeLocalPhoto(String photoId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final localPhotos = await getLocalPhotos();
-    localPhotos.removeWhere((p) => p.id.toString() == photoId);
-
-    final jsonList = localPhotos
-        .map(
-          (p) => jsonEncode({
-        'id': p.id,
-        'photographer_id': p.photographerId,
-        'photographer': p.photographer,
-        'photographer_url': p.photographerUrl,
-        'url': p.url,
-        'src': {'medium': p.src},
-      }),
-    )
-        .toList();
-    await prefs.setStringList(_localKey, jsonList);
+  static Future<void> _removePhoto(String key, String photoId) async {
+    final photos = await _getPhotos(key)
+      ..removeWhere((p) => p.id.toString() == photoId);
+    await _savePhotos(key, photos);
   }
 
-  static Future<bool> isLocal(String photoId) async {
-    final localPhotos = await getLocalPhotos();
-    return localPhotos.any((p) => p.id.toString() == photoId);
-  }
+  static Future<Set<String>> _getIds(String key) async =>
+      (await _getPhotos(key)).map((p) => p.id.toString()).toSet();
 
-  static Future<Set<String>> getLocalPhotoIds() async {
-    final localPhotos = await getLocalPhotos();
-    return localPhotos.map((p) => p.id.toString()).toSet();
-  }
+  static Future<bool> _containsPhoto(String key, String photoId) async =>
+      (await _getPhotos(key)).any((p) => p.id.toString() == photoId);
+
+  static Future<List<Photo>> getFavoritePhotos() => _getPhotos(_favoritesKey);
+
+  static Future<void> addFavorite(Photo photo) => _addPhoto(_favoritesKey, photo);
+
+  static Future<void> removeFavorite(String photoId) =>
+      _removePhoto(_favoritesKey, photoId);
+
+  static Future<bool> isFavorite(String photoId) =>
+      _containsPhoto(_favoritesKey, photoId);
+
+  static Future<Set<String>> getFavoriteIds() => _getIds(_favoritesKey);
+
+  static Future<List<Photo>> getLocalPhotos() => _getPhotos(_localKey);
+
+  static Future<void> addLocalPhoto(Photo photo) => _addPhoto(_localKey, photo);
+
+  static Future<void> removeLocalPhoto(String photoId) =>
+      _removePhoto(_localKey, photoId);
+
+  static Future<bool> isLocal(String photoId) => _containsPhoto(_localKey, photoId);
+
+  static Future<Set<String>> getLocalPhotoIds() => _getIds(_localKey);
 }
