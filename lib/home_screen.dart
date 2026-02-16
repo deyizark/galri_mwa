@@ -13,10 +13,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Photographer> photographers = [
-    Photographer(photographerId: "1", photographer: "Jean Paul"),
-    Photographer(photographerId: "2", photographer: "Marie Claire"),
-    Photographer(photographerId: "3", photographer: "David Louis"),
-    Photographer(photographerId: "4", photographer: "Sophia Noel"),
+    Photographer(photographerId: 1, photographer: "Jean Paul"),
+    Photographer(photographerId: 2, photographer: "Marie Claire"),
+    Photographer(photographerId: 3, photographer: "David Louis"),
+    Photographer(photographerId: 4, photographer: "Sophia Noel"),
   ];
 
   @override
