@@ -803,7 +803,7 @@ class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
   @override
   Widget build(BuildContext context) => const PhotoCollectionScreen(
-      title: Text('Favori', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+      title: 'Favori',
       load: StorageHelper.getFavoritePhotos,
       loadIds: StorageHelper.getFavoriteIds,
       remove: StorageHelper.removeFavorite,
@@ -817,7 +817,7 @@ class LocalScreen extends StatelessWidget {
   const LocalScreen({super.key});
   @override
   Widget build(BuildContext context) => const PhotoCollectionScreen(
-      title: Text('Foto lokal', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),),
+      title: 'Foto lokal',
       load: StorageHelper.getLocalPhotos,
       loadIds: StorageHelper.getLocalPhotoIds,
       remove: StorageHelper.removeLocalPhoto,
