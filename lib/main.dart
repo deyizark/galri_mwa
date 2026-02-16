@@ -4,7 +4,9 @@ import 'dart:typed_data';
 import 'api_service.dart';
 import 'models.dart';
 import 'storage_helper.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+
+// Pou download foto
+import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 const kPrimaryColor = Color(0xFF1976D2);
@@ -467,15 +469,11 @@ class _PhotoScreenState extends State<PhotoScreen> {
         final response = await http
             .get(Uri.parse(photo.src.replaceFirst('medium', 'large')));
         if (response.statusCode == 200) {
-          final result = await ImageGallerySaver.saveImage(
+          await Gal.putImageBytes(
             response.bodyBytes,
-            quality: 100,
             name: "pexels_${photo.id}",
           );
-
-          if (result['isSuccess']) {
-            _showMsg('Foto telechaje nan galri telefòn ou ✓');
-          }
+          _showMsg('Foto telechaje nan galri telefòn ou');
         }
       } else {
         _showMsg('Bezwen permission pou telechaje foto');
@@ -668,7 +666,7 @@ class _MiniIconBtn extends StatelessWidget {
   }
 }
 
-// ==================== PHOTO DETAIL  ====================
+// ==================== PHOTO DETAIL (AVEC SWIPE) ====================
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
   final int initialIndex;
@@ -977,7 +975,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Apwopo', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),)),
+      appBar: AppBar(title: const Text('Pwofil')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -997,7 +995,7 @@ class ProfileScreen extends StatelessWidget {
               child: const Icon(Icons.person, size: 60, color: Colors.white),
             ),
             const SizedBox(height: 24),
-            const Text('MWA Galri',
+            const Text('App Foto',
                 style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -1007,8 +1005,7 @@ class ProfileScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
             const SizedBox(height: 40),
             Container(
-              width: 300,
-              height: 100,
+              width: 280,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                   color: Colors.white,
@@ -1023,8 +1020,13 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   ListTile(
                       leading: Icon(Icons.info, color: kPrimaryColor),
-                      title: Text('Kisa MWA Galri ye !?'),
-                      subtitle: Text('Mwa Galri se yon aplikasyon mobil ki ba w posibilite pou w telechaje imaj ki anliy sou telefòn ou an. Li devlope pa 3 etidyan ESIH ki nan Syans Enfòmatik: MomnsenWhitchyAlcero')),
+                      title: Text('Sou app la'),
+                      subtitle: Text('App Pexels pou gade foto')),
+                  Divider(),
+                  ListTile(
+                      leading: Icon(Icons.settings, color: kPrimaryColor),
+                      title: Text('API Key'),
+                      subtitle: Text('Pexels API')),
                 ],
               ),
             ),

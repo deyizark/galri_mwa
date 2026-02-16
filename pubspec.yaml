@@ -47,7 +47,7 @@ dependencies:
 
   # Secure local storage
   flutter_secure_storage: ^10.0.0
-  image_gallery_saver: ^2.0.3
+  gal: ^2.0.3
 
 
   # Local key-value storage
