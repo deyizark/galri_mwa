@@ -5,7 +5,6 @@ import 'api_service.dart';
 import 'models.dart';
 import 'storage_helper.dart';
 
-
 import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -100,8 +99,8 @@ class _SplashScreenState extends State<SplashScreen>
                           spreadRadius: 5)
                     ],
                   ),
-                  
-                  child: Image.asset('assets/images/mwa-logo.png', width: 80, height: 80),
+                  child: Image.asset('assets/images/mwa-logo.png',
+                      width: 80, height: 80),
                 ),
               ),
               const SizedBox(height: 30),
@@ -262,7 +261,13 @@ class _PhotographersScreenState extends State<PhotographersScreen> {
                     border: InputBorder.none),
                 onChanged: _filter,
               )
-            : const Text('Fotograf yo', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),),
+            : const Text(
+                'Fotograf yo',
+                style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
         actions: [
           IconButton(
               icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -666,11 +671,8 @@ class _MiniIconBtn extends StatelessWidget {
   }
 }
 
-<<<<<<< HEAD
 // ==================== PHOTO DETAIL (AVEC SWIPE) ====================
-=======
-// PHOTO DETAIL
->>>>>>> dfbadd580a04dbae18259844e13fe251494b7bf7
+
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
   final int initialIndex;
