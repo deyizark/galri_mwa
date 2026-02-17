@@ -671,7 +671,7 @@ class _MiniIconBtn extends StatelessWidget {
   }
 }
 
-// ==================== PHOTO DETAIL (AVEC SWIPE) ====================
+// ==================== PHOTO DETAIL ====================
 
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
